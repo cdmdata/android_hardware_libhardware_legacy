@@ -20,7 +20,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <string.h>
-#include <sys/ioctl.h>
+#include <sys/ioctl.h> 
 
 #include "hardware_legacy/wifi.h"
 #include "libwpa_client/wpa_ctrl.h"
@@ -232,12 +232,15 @@ int wifi_load_driver()
     int count = 100; /* wait at most 20 seconds for completion */
 
     if (check_driver_loaded()) {
+        LOGE("wifi_load_driver Driver already loaded");
         return 0;
     }
 
 #ifndef ATHEROS_WIFI_SDK  /* NOT atheros SDK */
-    if (insmod(DRIVER_MODULE_PATH, DRIVER_MODULE_ARG) < 0)
+    if (insmod(DRIVER_MODULE_PATH, DRIVER_MODULE_ARG) < 0){
+        LOGE("wifi_load_driver insmod failed: %s", DRIVER_MODULE_PATH );
         return -1;
+    }
 #endif
 
     if (strcmp(FIRMWARE_LOADER,"") == 0) {
@@ -253,9 +256,12 @@ int wifi_load_driver()
     sched_yield();
     while (count-- > 0) {
         if (property_get(DRIVER_PROP_NAME, driver_status, NULL)) {
-            if (strcmp(driver_status, "ok") == 0)
+            if (strcmp(driver_status, "ok") == 0){
+                LOGE("all ok");
                 return 0;
+            }
             else if (strcmp(DRIVER_PROP_NAME, "failed") == 0) {
+                LOGE("prop_get failed");
                 wifi_unload_driver();
                 return -1;
             }
